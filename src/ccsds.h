@@ -60,6 +60,7 @@ typedef struct {
     csp_packet_t           *csp_packet;
     bool                    use_rs;
     const ccsds_asm_t      *ccsds_asm;
+    int                     dbg_lvl;
 } ccsds_frame_obj_t;
 
 extern const ccsds_asm_t CCSDS_ASM;

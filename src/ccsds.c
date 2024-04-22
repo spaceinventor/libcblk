@@ -87,7 +87,7 @@ int ccsds_pack_next_frame(ccsds_frame_obj_t *me, csp_packet_t *packet, uint8_t *
 
 void ccsds_unpack_frame(ccsds_frame_obj_t *me, csp_iface_t *iface, uint8_t *frame, time_t ctx_time)
 {
-    uint8_t dbg_lvl = 0;
+    uint8_t dbg_lvl = me->dbg_lvl;
 
     if (me->ccsds_asm) {
         /* Expect CCSDS ASM */
