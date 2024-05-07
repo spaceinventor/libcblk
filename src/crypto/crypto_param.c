@@ -4,8 +4,8 @@
 #include <param/param.h>
 #include "../param_config.h"
 
-#include "crypto.h"
-#include "crypto_param.h"
+#include <crypto/crypto.h>
+#include <crypto/crypto_param.h>
 
 VMEM_DEFINE_FILE(crypto, "crypto", "crypto.vmem", 0x100);
 

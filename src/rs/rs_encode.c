@@ -10,7 +10,7 @@
  */
 
 #include <string.h>
-#include "rs.h"
+#include <rs/rs.h>
 
 /* Portable C version */
 void encode_rs_ccsds(data_t *data, data_t *parity,int pad) {

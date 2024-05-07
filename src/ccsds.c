@@ -3,10 +3,10 @@
 
 #include <csp/csp_id.h>
 
-#include "ccsds.h"
+#include <ccsds/ccsds.h>
 #include "crypto/crypto_param.h"
 #include "crypto/crypto.h"
-#include "ccsds_randomize.h"
+#include <ccsds/ccsds_randomize.h>
 
 const ccsds_asm_t CCSDS_ASM = 0x1ACFFC1D;
 
