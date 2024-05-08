@@ -1,0 +1,23 @@
+name: Build CI
+
+on:
+  push:
+    branches: [ "*" ]
+  
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Setup build system packages on Linux
+      run: |
+        sudo apt-get install ninja-build meson tree gcc-arm-none-eabi python3-pip
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.SI_ORG_BUILD_USER_TOKEN }}
+        submodules: recursive
+        fetch-tags: true
+        fetch-depth: 100
+    - name: Meson build & test
+      run: |
+        meson setup builddir && ninja -C builddir test
