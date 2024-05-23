@@ -3,10 +3,10 @@
 
 #include <csp/csp_id.h>
 
-#include "ccsds.h"
+#include <ccsds/ccsds.h>
 #include "crypto/crypto_param.h"
 #include "crypto/crypto.h"
-#include "ccsds_randomize.h"
+#include <ccsds/ccsds_randomize.h>
 
 const ccsds_asm_t CCSDS_ASM = 0x1ACFFC1D;
 
@@ -165,7 +165,7 @@ void ccsds_unpack_frame(ccsds_frame_obj_t *me, csp_iface_t *iface, uint8_t *fram
         }
     }
 
-    /* We can increment the prevsiously known idx to the current */
+    /* We can increment the previously known idx to the current */
     me->prev_idx++;
 
     /* Allocate CSP packet buffer */
@@ -218,7 +218,11 @@ void ccsds_unpack_frame(ccsds_frame_obj_t *me, csp_iface_t *iface, uint8_t *fram
     }
 
     if (dbg_lvl > 3) {
-        csp_print("Entire CSP packet stiched together, write to the QFIFO (IF:'%s',ADDR:%d)\n", iface->name, iface->addr);
+        if (numframes > 0) {
+            csp_print("CSP packet stitched together from multiple CCSDS frames, written to the QFIFO (IF:'%s',ADDR:%d, Sz: %d)\n", iface->name, iface->addr, len);
+        } else {
+            csp_print("CSP packet written to the QFIFO (IF:'%s',ADDR:%d, Sz: %d))\n", iface->name, iface->addr, len);
+        }
     }
 
     /* Send back into CSP, notice calling from task so last argument must be NULL! */

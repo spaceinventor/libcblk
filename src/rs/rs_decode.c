@@ -15,7 +15,7 @@
 #define NULL ((void *)0)
 #define	min(a,b)	((a) < (b) ? (a) : (b))
 
-#include "rs.h"
+#include <rs/rs.h>
 
 static int _decode_rs_8(data_t *data, int *eras_pos, int no_eras,int pad);
 

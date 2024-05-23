@@ -1,11 +1,11 @@
-#include "crypto.h"
+#include <crypto/crypto.h>
 
 #include <csp/arch/csp_time.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "tweetnacl.h"
-#include "crypto_param.h"
+#include <crypto/crypto_param.h>
 
 #define NOUNCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
 
