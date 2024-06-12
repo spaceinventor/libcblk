@@ -11,7 +11,6 @@ test_tests = executable(
     [test_sources],
     include_directories: ['mocks', 'framework', '..',],
     dependencies: [gtest_dep, gtest_main_dep, gmock_dep, ccsds_dep,],  
-    link_with : [gtest_lib, gmock_lib]
 )
 
 test('ccsds_tests', test_tests)

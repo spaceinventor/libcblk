@@ -36,12 +36,8 @@ ccsds_lib = static_library('ccsds',
 ccsds_dep = declare_dependency(include_directories : api, link_with : ccsds_lib, dependencies: [csp_dep, param_dep])
 
 if not meson.is_subproject()
-    cmake = import('cmake')
-    gtest_proj = cmake.subproject('gtest')
-    gtest_dep = gtest_proj.get_variable('gtest_dep') 
-    gtest_main_dep = gtest_proj.get_variable('gtest_main_dep') 
-    gmock_dep = gtest_proj.get_variable('gmock_dep') 
-    gtest_lib = static_library('gtest', install : false)
-    gmock_lib = static_library('gmock', install: false) 
+    gtest_dep = dependency('gtest', main : true)
+    gtest_main_dep = dependency('gtest_main')
+    gmock_dep = dependency('gmock') 
     subdir('tests')
 endif
