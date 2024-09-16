@@ -1,3 +1,9 @@
+add_languages('cpp')
+
+gtest_dep = dependency('gtest', main : true)
+gtest_main_dep = dependency('gtest_main')
+gmock_dep = dependency('gmock') 
+
 test_sources = [
     'ccsds_tests.cpp',
     'mocks/mocks.cpp',

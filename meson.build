@@ -1,4 +1,4 @@
-project('ccsds', ['c', 'cpp'], default_options: [
+project('ccsds', ['c'], default_options: [
 	'buildtype=debug', 
 	'c_std=gnu11', 
 	'b_lto=false',
@@ -26,18 +26,17 @@ ccsds_src = files([
 ccsds_inc = include_directories('src')
 api = include_directories('include')
 
-ccsds_lib = static_library('ccsds',
+ccsds_lib = library('ccsds',
 	sources: [ccsds_src],
 	include_directories : [ccsds_inc, api],
 	dependencies : [csp_dep, param_dep],
-	install : false
+	install : true
 )
+pkg = import('pkgconfig')
+pkg.generate(ccsds_lib, filebase: 'ccsds')
 
 ccsds_dep = declare_dependency(include_directories : api, link_with : ccsds_lib, dependencies: [csp_dep, param_dep])
 
 if not meson.is_subproject()
-    gtest_dep = dependency('gtest', main : true)
-    gtest_main_dep = dependency('gtest_main')
-    gmock_dep = dependency('gmock') 
     subdir('tests')
 endif
