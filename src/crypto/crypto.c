@@ -1,11 +1,11 @@
-#include <crypto/crypto.h>
+#include "crypto/crypto.h"
 
 #include <csp/arch/csp_time.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "tweetnacl.h"
-#include <crypto/crypto_param.h>
+#include "crypto/crypto_param.h"
 
 #define NOUNCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
 
@@ -126,7 +126,9 @@ int16_t crypto_encrypt(uint8_t * msg_begin, uint16_t msg_len) {
 
 void crypto_init() {
 
-    crypto_param_init();
-
     crypto_key_generate(NULL, -1);
+
+    if (param_get_uint8(&rx_decrypt) > 0) {
+        param_set_uint8(&rx_decrypt, param_get_uint8(&rx_decrypt) - 1);
+    }
 }
