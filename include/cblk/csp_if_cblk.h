@@ -5,17 +5,29 @@
 #include <csp/csp.h>
 #include <param/param.h>
 
+typedef enum { CBLK_EXTHDR_NOSUPPORT = 0b00, CBLK_EXTHDR_SUPPORT = 0b01, CBLK_EXTHDR_PRESENT = 0b10} ext_hdr_e;
+
 typedef struct __attribute__((packed))
 {
-    uint8_t                 ccsds_frame_idx;     //! Space Inventor CSP packet counter
-    uint8_t                 csp_packet_idx;    //! Space Inventor CCSDS frame counter for current packet
-    uint16_t                data_length;        //! Data length in RS frame in bytes
+    /* Byte 0 */
+    uint8_t                 ccsds_frame_idx : 4; //! CCSDS frame counter for current packet
+    uint8_t                 aes             : 1; //! 0 = NaCL if crypto_key is set, 1 = AES (not currently supported)
+    uint8_t                 nacl_crypto_key : 2; //! 0 = no encryption, 1-3 NaCL pre-shared key encryption
+    uint8_t                 nacl_reserved   : 1;
+    /* Byte 1 */
+    uint8_t                 csp_packet_idx  : 5; //! CSP packet counter
+    ext_hdr_e               ext_hdr         : 2; //! Indicate support and inclusion of extended header (not currently supported)
+    uint8_t                 reserved1       : 1;
+
+    /* Byte 2 & 3*/
+    uint16_t                data_length     :16; //! Data length in RS frame in bytes
+
 } cblk_hdr_t;
 
 typedef struct __attribute__((packed))
 {
-    cblk_hdr_t              hdr;                //! Space Inventor specific header
-    uint8_t                 data[];             //! Space Inventor specific data
+    cblk_hdr_t              hdr;                 //! Space Inventor specific header
+    uint8_t                 data[];              //! Space Inventor specific data
 } cblk_frame_t;
 
 #define CCSDS_FRAME_LEN 223

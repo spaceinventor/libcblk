@@ -43,51 +43,46 @@ network, don't forget to remove them!
 uint8_t decrypt_in[CSP_BUFFER_SIZE+crypto_secretbox_KEYBYTES+crypto_secretbox_BOXZEROBYTES];
 uint8_t decrypt_out[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
 uint8_t decrypt_nonce[crypto_box_NONCEBYTES];
-int16_t crypto_decrypt(uint8_t * ciphertext, uint16_t ciphertext_len) {
+int16_t crypto_decrypt(uint8_t * ciphertext, uint16_t ciphertext_len, uint8_t crypto_key) {
 
     ciphertext_len = ciphertext_len - NOUNCE_SIZE;
 
     /* Copy msg to new buffer, to make room for zerofill */
     memcpy(&decrypt_in[crypto_secretbox_BOXZEROBYTES], ciphertext, ciphertext_len);
 
-    for (int c = 0; c < CRYPTO_NUM_KEYS; c++) {
+    /* Receive nonce */
+    memcpy(&decrypt_nonce, &ciphertext[ciphertext_len], NOUNCE_SIZE);
 
-        /* Receive nonce */
-        memcpy(&decrypt_nonce, &ciphertext[ciphertext_len], NOUNCE_SIZE);
+    /* Make room for zerofill at the beginning of message */
+    memset(decrypt_in, 0, crypto_secretbox_BOXZEROBYTES);
 
-        /* Make room for zerofill at the beginning of message */
-        memset(decrypt_in, 0, crypto_secretbox_BOXZEROBYTES);
+    /* Make room for zerofill at the beginning of message */
+    memset(decrypt_out, 0, crypto_secretbox_ZEROBYTES);
 
-        /* Make room for zerofill at the beginning of message */
-        memset(decrypt_out, 0, crypto_secretbox_ZEROBYTES);
-
-        /* Decryption */
-        if(crypto_box_open_afternm(decrypt_out, decrypt_in, ciphertext_len, decrypt_nonce, _crypto_beforenm[c]) != 0) {
-            param_set_uint16(&crypto_fail_auth_count, param_get_uint16(&crypto_fail_auth_count) + 1);
-            continue;
-        }
-
-        /* Message successfully decrypted, check for valid nonce */
-        uint64_t nonce_counter;
-        memcpy(&nonce_counter, decrypt_nonce, sizeof(uint64_t));
-        uint8_t nounce_group = decrypt_nonce[sizeof(uint64_t)];
-        uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nounce_group);
-        if(nonce_counter <= nonce_rx) {
-            param_set_uint16(&crypto_fail_nonce_count, param_get_uint16(&crypto_fail_nonce_count) + 1);
-            continue;
-        }
-
-        /* Copy encrypted data back to msgbuffer */
-        memcpy(ciphertext, &decrypt_out[crypto_secretbox_ZEROBYTES], ciphertext_len - crypto_secretbox_KEYBYTES);
-
-        /* Update counter with received value so that next sent value is higher */
-        param_set_uint64_array(&crypto_nonce_rx_count, nounce_group, nonce_counter);
-
-        /* Return useable length */
-        return ciphertext_len - crypto_secretbox_KEYBYTES;
+    /* Decryption */
+    if(crypto_box_open_afternm(decrypt_out, decrypt_in, ciphertext_len, decrypt_nonce, _crypto_beforenm[crypto_key-1]) != 0) {
+        param_set_uint16(&crypto_fail_auth_count, param_get_uint16(&crypto_fail_auth_count) + 1);
+        return -1;
     }
 
-    return -1;
+    /* Message successfully decrypted, check for valid nonce */
+    uint64_t nonce_counter;
+    memcpy(&nonce_counter, decrypt_nonce, sizeof(uint64_t));
+    uint8_t nounce_group = decrypt_nonce[sizeof(uint64_t)];
+    uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nounce_group);
+    if(nonce_counter <= nonce_rx) {
+        param_set_uint16(&crypto_fail_nonce_count, param_get_uint16(&crypto_fail_nonce_count) + 1);
+        return -1;
+    }
+
+    /* Copy encrypted data back to msgbuffer */
+    memcpy(ciphertext, &decrypt_out[crypto_secretbox_ZEROBYTES], ciphertext_len - crypto_secretbox_KEYBYTES);
+
+    /* Update counter with received value so that next sent value is higher */
+    param_set_uint64_array(&crypto_nonce_rx_count, nounce_group, nonce_counter);
+
+    /* Return useable length */
+    return ciphertext_len - crypto_secretbox_KEYBYTES;
 }
 
 uint8_t encrypt_in[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];

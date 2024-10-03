@@ -71,17 +71,19 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
     for (int8_t frame_cnt = 0; frame_cnt < num_ccsds_from_csp(packet->frame_length); frame_cnt++) {
 
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
+        memset(tx_ccsds_buf, 0, sizeof(cblk_hdr_t));
 
-        tx_ccsds_buf->hdr.csp_packet_idx = (uint8_t)(iface->tx&0x1F);
+        tx_ccsds_buf->hdr.csp_packet_idx = iface->tx;
         tx_ccsds_buf->hdr.ccsds_frame_idx = frame_cnt;
         tx_ccsds_buf->hdr.data_length = htobe16(packet->frame_length);
+        tx_ccsds_buf->hdr.nacl_crypto_key = param_get_uint8(&tx_encrypt);
 
         if (_cblk_tx_debug >= 1) {
             printf("TX CCSDS header: %u %u %u\n", tx_ccsds_buf->hdr.csp_packet_idx, frame_cnt, packet->frame_length);
         }
         uint16_t segment_len = (CBLK_DATA_LEN < bytes_remain) ? CBLK_DATA_LEN : bytes_remain;
 
-        memcpy((uint8_t*)tx_ccsds_buf+sizeof(cblk_hdr_t), packet->frame_begin+(packet->frame_length-bytes_remain), segment_len);
+        memcpy(tx_ccsds_buf->data, packet->frame_begin+(packet->frame_length-bytes_remain), segment_len);
 
         if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {
             csp_buffer_free(packet);
@@ -129,6 +131,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
             printf("Part of CSP frame is missing: Received part %d of %d, first part not received\n", 
                 frame->hdr.ccsds_frame_idx, frame->hdr.csp_packet_idx);
         }
+        iface->frame++;
         goto out_discard;
 
     } else if (ifdata->rx_frame_idx+1 != frame->hdr.ccsds_frame_idx || ifdata->rx_packet_idx != frame->hdr.csp_packet_idx) {
@@ -138,6 +141,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
             printf("Part of CSP frame is missing: Received part %d of %d, expected part %d of %d or part %d of %d\n", 
                 frame->hdr.ccsds_frame_idx, frame->hdr.csp_packet_idx, ifdata->rx_frame_idx+1, ifdata->rx_packet_idx, 0, (ifdata->rx_packet_idx+1)%255);
         }
+        iface->frame++;
         goto out_discard;
 
     } else { /* We received the next part of an ongoing CSP frame reception */
@@ -154,18 +158,25 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
         return CSP_ERR_NONE;
     }
 
-    if (param_get_uint8(&rx_decrypt)) {
+    if (frame->hdr.nacl_crypto_key > 0) {
 
         if (_cblk_rx_debug >= 3) {
             csp_hex_dump("-rx_enc", ifdata->rx_packet->frame_begin, ifdata->rx_packet->frame_length);
         }
 
-        int16_t dec_frame_length = crypto_decrypt(ifdata->rx_packet->frame_begin, ifdata->rx_packet->frame_length);
+        int16_t dec_frame_length = crypto_decrypt(ifdata->rx_packet->frame_begin, ifdata->rx_packet->frame_length, frame->hdr.nacl_crypto_key);
 
         if (dec_frame_length < 0) {
+            iface->autherr++;
             goto out_discard;
         }
+
         ifdata->rx_packet->frame_length = dec_frame_length;
+
+    } else if (param_get_uint8(&rx_decrypt)) {
+
+        iface->autherr++;
+        goto out_discard;
     }
 
     if (_cblk_rx_debug >= 3) {
@@ -174,6 +185,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
 
     /* Strip and parse CSP header */
     if (csp_id_strip(ifdata->rx_packet) < 0) {
+        iface->frame++;
         goto out_discard;
     }
 
@@ -191,7 +203,6 @@ out_discard:
     ifdata->rx_packet = NULL;
     ifdata->rx_frame_idx = -1;
     return CSP_ERR_HMAC;
-
 }
 
 void csp_if_cblk_init(csp_iface_t * iface) {
