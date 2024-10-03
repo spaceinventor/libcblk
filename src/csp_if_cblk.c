@@ -201,7 +201,6 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
 out_discard:
     csp_buffer_free(ifdata->rx_packet);
     ifdata->rx_packet = NULL;
-    ifdata->rx_frame_idx = -1;
     return CSP_ERR_HMAC;
 }
 
