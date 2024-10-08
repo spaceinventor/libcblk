@@ -32,6 +32,8 @@ typedef struct __attribute__((packed))
 
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))
+#define CRYPTO_PREAMP 16 /* crypto_secretbox_BOXZEROBYTES */
+#define CRYPTO_POSTAMP 32+9 /* crypto_secretbox_KEYBYTES + NOUNCE_SIZE */
 
 typedef struct {
 
@@ -47,7 +49,8 @@ typedef struct {
     /* Variables for internal use */
     uint8_t rx_packet_idx;
     uint8_t rx_frame_idx;
-    csp_packet_t *rx_packet;
+    uint8_t packet_enc[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
+    uint8_t packet_dec[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
 
 } csp_cblk_interface_data_t;
 
