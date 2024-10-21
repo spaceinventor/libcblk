@@ -75,6 +75,11 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
     for (int8_t frame_cnt = 0; frame_cnt < num_ccsds_from_csp(frame_length); frame_cnt++) {
 
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
+        if (tx_ccsds_buf == NULL) {
+            csp_buffer_free(packet);
+            return CSP_ERR_NOBUFS;
+        }
+
         memset(tx_ccsds_buf, 0, sizeof(cblk_hdr_t));
 
         tx_ccsds_buf->hdr.csp_packet_idx = iface->tx;
