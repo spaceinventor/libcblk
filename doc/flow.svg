@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="flow.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.1326109"
+     inkscape:cx="317.40822"
+     inkscape:cy="15.451026"
+     inkscape:window-width="2490"
+     inkscape:window-height="1376"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g10067"
+       transform="translate(19.59269,-12.433068)">
+      <rect
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.264583"
+         id="rect846"
+         width="114.01057"
+         height="8.1199999"
+         x="4.0079317"
+         y="23.954731" />
+      <text
+         xml:space="preserve"
+         style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="4.7361217"
+         y="29.677542"
+         id="text6884"><tspan
+           sodipodi:role="line"
+           id="tspan6882"
+           style="stroke-width:0.264583"
+           x="4.7361217"
+           y="29.677542">6 byte CSP header</tspan></text>
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 46.145161,23.917572 v 8.041573"
+         id="path7101" />
+      <text
+         xml:space="preserve"
+         style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="47.665417"
+         y="29.711153"
+         id="text9979"><tspan
+           sodipodi:role="line"
+           id="tspan9977"
+           style="stroke-width:0.264583"
+           x="47.665417"
+           y="29.711153">&lt;= 2048 byte payload data</tspan></text>
+    </g>
+    <g
+       id="g17235">
+      <rect
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.264583"
+         id="rect846-60"
+         width="172.3634"
+         height="8.1199989"
+         x="22.253357"
+         y="29.88225" />
+      <text
+         xml:space="preserve"
+         style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="22.981548"
+         y="35.605061"
+         id="text6884-6"><tspan
+           sodipodi:role="line"
+           id="tspan6882-2"
+           style="stroke-width:0.264583"
+           x="22.981548"
+           y="35.605061">Encrypted data</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="131.44418"
+         y="35.638672"
+         id="text6884-6-9"><tspan
+           sodipodi:role="line"
+           id="tspan6882-2-2"
+           style="stroke-width:0.264583"
+           x="131.44418"
+           y="35.638672">32 bytes key</tspan></text>
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 161.26632,29.84509 v 8.041573"
+         id="path7101-6" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 129.0475,29.84509 v 8.041573"
+         id="path7101-6-7" />
+      <text
+         xml:space="preserve"
+         style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+         x="163.60692"
+         y="35.638672"
+         id="text9979-1"><tspan
+           sodipodi:role="line"
+           id="tspan9977-8"
+           style="stroke-width:0.264583"
+           x="163.60692"
+           y="35.638672">9 byte nonce</tspan></text>
+    </g>
+    <g
+       id="g17224"
+       transform="translate(1.3496086)">
+      <g
+         id="g14712"
+         transform="translate(2.825158,-0.28926847)">
+        <rect
+           style="fill:#ffffff;stroke:#000000;stroke-width:0.264583"
+           id="rect846-6"
+           width="90.802483"
+           height="8.1200027"
+           x="10.39974"
+           y="48.532104" />
+        <text
+           xml:space="preserve"
+           style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+           x="11.127928"
+           y="54.254913"
+           id="text6884-7"><tspan
+             sodipodi:role="line"
+             id="tspan6882-5"
+             style="stroke-width:0.264583"
+             x="11.127928"
+             y="54.254913">4 byte CBLK header</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 56.623227,48.494943 v 8.041573"
+           id="path7101-3" />
+        <text
+           xml:space="preserve"
+           style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+           x="58.143482"
+           y="54.288528"
+           id="text9979-5"><tspan
+             sodipodi:role="line"
+             id="tspan9977-6"
+             style="stroke-width:0.264583"
+             x="58.143482"
+             y="54.288528">219 byte data</tspan></text>
+      </g>
+      <g
+         id="g14712-0"
+         transform="translate(99.743779,-0.28926849)">
+        <rect
+           style="fill:#ffffff;stroke:#000000;stroke-width:0.264583"
+           id="rect846-6-2"
+           width="90.802483"
+           height="8.1200027"
+           x="10.39974"
+           y="48.532104" />
+        <text
+           xml:space="preserve"
+           style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+           x="11.127928"
+           y="54.254913"
+           id="text6884-7-3"><tspan
+             sodipodi:role="line"
+             id="tspan6882-5-7"
+             style="stroke-width:0.264583"
+             x="11.127928"
+             y="54.254913">4 byte CBLK header</tspan></text>
+        <path
+           style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 56.623227,48.494943 v 8.041573"
+           id="path7101-3-5" />
+        <text
+           xml:space="preserve"
+           style="font-size:4.23333px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+           x="58.143482"
+           y="54.288528"
+           id="text9979-5-9"><tspan
+             sodipodi:role="line"
+             id="tspan9977-6-2"
+             style="stroke-width:0.264583"
+             x="58.143482"
+             y="54.288528">219 byte data</tspan></text>
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 23.600621,19.641662 22.253357,29.882248"
+       id="path14848" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 137.61119,19.641662 57.00557,10.240586"
+       id="path15067" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 14.574507,48.242836 7.67885,-10.240587"
+       id="path17270" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 105.37699,48.242836 3.17214,-10.192857"
+       id="path17272"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 111.49313,48.242836 -2.944,-10.192857"
+       id="path17274"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 194.61676,38.002249 7.67885,10.240587"
+       id="path17276" />
+  </g>
+</svg>
