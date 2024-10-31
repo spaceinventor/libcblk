@@ -26,7 +26,7 @@ static void forward_other_ifcs(csp_iface_t * iface, csp_packet_t *packet) {
 
             csp_packet_t * packet_copy = csp_buffer_clone(packet);
 
-            if (ifc->nexthop(ifc, CSP_NO_VIA_ADDRESS, packet_copy, 1) == CSP_ERR_NONE) {
+            if (ifc->nexthop(ifc, CSP_NO_VIA_ADDRESS, packet_copy, 1) != CSP_ERR_NONE) {
                 csp_buffer_free(packet_copy);
             }
         }
