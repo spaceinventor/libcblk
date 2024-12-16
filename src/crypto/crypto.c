@@ -1,11 +1,11 @@
-#include <crypto/crypto.h>
+#include "crypto/crypto.h"
 
 #include <csp/arch/csp_time.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "tweetnacl.h"
-#include <crypto/crypto_param.h>
+#include "crypto/crypto_param.h"
 
 #define NOUNCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
 
@@ -40,59 +40,49 @@ of the actual ciphertext. This is used in a similar fashion. These padding octet
 part of either the plaintext or the ciphertext, so if you are sending ciphertext across the
 network, don't forget to remove them!
 */
-uint8_t decrypt_in[CSP_BUFFER_SIZE+crypto_secretbox_KEYBYTES+crypto_secretbox_BOXZEROBYTES];
 uint8_t decrypt_out[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
-uint8_t decrypt_nonce[crypto_box_NONCEBYTES];
-int16_t crypto_decrypt(uint8_t * ciphertext, uint16_t ciphertext_len) {
+int16_t crypto_decrypt(uint8_t * msg_out, uint8_t * decrypt_in, uint16_t ciphertext_len, uint8_t crypto_key) {
 
     ciphertext_len = ciphertext_len - NOUNCE_SIZE;
 
-    /* Copy msg to new buffer, to make room for zerofill */
-    memcpy(&decrypt_in[crypto_secretbox_BOXZEROBYTES], ciphertext, ciphertext_len);
+    /* Receive nonce */
+    uint8_t decrypt_nonce[crypto_box_NONCEBYTES] = {};
+    memcpy(&decrypt_nonce, &decrypt_in[crypto_secretbox_BOXZEROBYTES+ciphertext_len], NOUNCE_SIZE);
 
-    for (int c = 0; c < CRYPTO_NUM_KEYS; c++) {
+    /* Make room for zerofill at the beginning of message */
+    memset(decrypt_in, 0, crypto_secretbox_BOXZEROBYTES);
 
-        /* Receive nonce */
-        memcpy(&decrypt_nonce, &ciphertext[ciphertext_len], NOUNCE_SIZE);
+    /* Make room for zerofill at the beginning of message */
+    memset(decrypt_out, 0, crypto_secretbox_ZEROBYTES);
 
-        /* Make room for zerofill at the beginning of message */
-        memset(decrypt_in, 0, crypto_secretbox_BOXZEROBYTES);
-
-        /* Make room for zerofill at the beginning of message */
-        memset(decrypt_out, 0, crypto_secretbox_ZEROBYTES);
-
-        /* Decryption */
-        if(crypto_box_open_afternm(decrypt_out, decrypt_in, ciphertext_len, decrypt_nonce, _crypto_beforenm[c]) != 0) {
-            param_set_uint16(&crypto_fail_auth_count, param_get_uint16(&crypto_fail_auth_count) + 1);
-            continue;
-        }
-
-        /* Message successfully decrypted, check for valid nonce */
-        uint64_t nonce_counter;
-        memcpy(&nonce_counter, decrypt_nonce, sizeof(uint64_t));
-        uint8_t nounce_group = decrypt_nonce[sizeof(uint64_t)];
-        uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nounce_group);
-        if(nonce_counter <= nonce_rx) {
-            param_set_uint16(&crypto_fail_nonce_count, param_get_uint16(&crypto_fail_nonce_count) + 1);
-            continue;
-        }
-
-        /* Copy encrypted data back to msgbuffer */
-        memcpy(ciphertext, &decrypt_out[crypto_secretbox_ZEROBYTES], ciphertext_len - crypto_secretbox_KEYBYTES);
-
-        /* Update counter with received value so that next sent value is higher */
-        param_set_uint64_array(&crypto_nonce_rx_count, nounce_group, nonce_counter);
-
-        /* Return useable length */
-        return ciphertext_len - crypto_secretbox_KEYBYTES;
+    /* Decryption */
+    if(crypto_box_open_afternm(decrypt_out, decrypt_in, ciphertext_len, decrypt_nonce, _crypto_beforenm[crypto_key-1]) != 0) {
+        param_set_uint16(&crypto_fail_auth_count, param_get_uint16(&crypto_fail_auth_count) + 1);
+        return -1;
     }
 
-    return -1;
+    /* Message successfully decrypted, check for valid nonce */
+    uint64_t nonce_counter;
+    memcpy(&nonce_counter, decrypt_nonce, sizeof(uint64_t));
+    uint8_t nounce_group = decrypt_nonce[sizeof(uint64_t)];
+    uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nounce_group);
+    if(nonce_counter <= nonce_rx) {
+        param_set_uint16(&crypto_fail_nonce_count, param_get_uint16(&crypto_fail_nonce_count) + 1);
+        return -1;
+    }
+
+    /* Copy encrypted data back to msgbuffer */
+    memcpy(msg_out, &decrypt_out[crypto_secretbox_ZEROBYTES], ciphertext_len - crypto_secretbox_KEYBYTES);
+
+    /* Update counter with received value so that next sent value is higher */
+    param_set_uint64_array(&crypto_nonce_rx_count, nounce_group, nonce_counter);
+
+    /* Return useable length */
+    return ciphertext_len - crypto_secretbox_KEYBYTES;
 }
 
 uint8_t encrypt_in[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
-uint8_t encrypt_out[CSP_BUFFER_SIZE+crypto_secretbox_KEYBYTES+crypto_secretbox_BOXZEROBYTES];
-int16_t crypto_encrypt(uint8_t * msg_begin, uint16_t msg_len) {
+int16_t crypto_encrypt(uint8_t * msg_out, uint8_t * msg_in, uint16_t msg_len) {
 
     uint64_t tx_nonce = param_get_uint64(&crypto_nonce_tx_count) + 1;
     param_set_uint64(&crypto_nonce_tx_count, tx_nonce);
@@ -103,30 +93,29 @@ int16_t crypto_encrypt(uint8_t * msg_begin, uint16_t msg_len) {
     nonce[sizeof(uint64_t)] = param_get_uint8(&crypto_nonce_tx_id);
 
     /* Copy msg to new buffer, to make room for zerofill */
-    memcpy(&encrypt_in[crypto_secretbox_ZEROBYTES], msg_begin, msg_len);
+    memcpy(&encrypt_in[crypto_secretbox_ZEROBYTES], msg_in, msg_len);
 
     /* Make room for zerofill at the beginning of message */
     memset(encrypt_in, 0, crypto_secretbox_ZEROBYTES);
 
     /* Make room for zerofill at the beginning of message */
-    memset(encrypt_out, 0, crypto_secretbox_BOXZEROBYTES);
+    memset(msg_out, 0, crypto_secretbox_BOXZEROBYTES);
 
-    if (crypto_box_afternm(encrypt_out, encrypt_in, crypto_secretbox_KEYBYTES + msg_len, nonce, _crypto_beforenm[param_get_uint8(&tx_encrypt)-1]) != 0) {
+    if (crypto_box_afternm(msg_out, encrypt_in, crypto_secretbox_KEYBYTES + msg_len, nonce, _crypto_beforenm[param_get_uint8(&tx_encrypt)-1]) != 0) {
         return -1;
     }
 
-    /* Copy encrypted data back to msgbuffer */
-    memcpy(msg_begin, &encrypt_out[crypto_secretbox_BOXZEROBYTES], msg_len + crypto_secretbox_KEYBYTES);
-
     /* Add nonce at the end of the packet */
-    memcpy(&msg_begin[msg_len + crypto_secretbox_KEYBYTES], nonce, NOUNCE_SIZE);
+    memcpy(&msg_out[crypto_secretbox_BOXZEROBYTES + msg_len + crypto_secretbox_KEYBYTES], nonce, NOUNCE_SIZE);
 
     return msg_len + crypto_secretbox_KEYBYTES + NOUNCE_SIZE;
 }
 
 void crypto_init() {
 
-    crypto_param_init();
-
     crypto_key_generate(NULL, -1);
+
+    if (param_get_uint8(&rx_decrypt) > 0) {
+        param_set_uint8(&rx_decrypt, param_get_uint8(&rx_decrypt) - 1);
+    }
 }
