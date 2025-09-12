@@ -7,7 +7,7 @@
 #include "tweetnacl.h"
 #include "crypto/crypto_param.h"
 
-#define NOUNCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
+#define NONCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
 
 uint8_t _crypto_beforenm[CRYPTO_NUM_KEYS][crypto_secretbox_KEYBYTES];
 
@@ -40,14 +40,14 @@ of the actual ciphertext. This is used in a similar fashion. These padding octet
 part of either the plaintext or the ciphertext, so if you are sending ciphertext across the
 network, don't forget to remove them!
 */
-uint8_t decrypt_out[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
+uint8_t decrypt_out[CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
 int16_t crypto_decrypt(uint8_t * msg_out, uint8_t * decrypt_in, uint16_t ciphertext_len, uint8_t crypto_key) {
 
-    ciphertext_len = ciphertext_len - NOUNCE_SIZE;
+    ciphertext_len = ciphertext_len - NONCE_SIZE;
 
     /* Receive nonce */
     uint8_t decrypt_nonce[crypto_box_NONCEBYTES] = {};
-    memcpy(&decrypt_nonce, &decrypt_in[crypto_secretbox_BOXZEROBYTES+ciphertext_len], NOUNCE_SIZE);
+    memcpy(&decrypt_nonce, &decrypt_in[crypto_secretbox_BOXZEROBYTES+ciphertext_len], NONCE_SIZE);
 
     /* Make room for zerofill at the beginning of message */
     memset(decrypt_in, 0, crypto_secretbox_BOXZEROBYTES);
@@ -81,7 +81,7 @@ int16_t crypto_decrypt(uint8_t * msg_out, uint8_t * decrypt_in, uint16_t ciphert
     return ciphertext_len - crypto_secretbox_KEYBYTES;
 }
 
-uint8_t encrypt_in[CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
+uint8_t encrypt_in[crypto_secretbox_ZEROBYTES+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE];
 int16_t crypto_encrypt(uint8_t * msg_out, uint8_t * msg_in, uint16_t msg_len) {
 
     uint64_t tx_nonce = param_get_uint64(&crypto_nonce_tx_count) + 1;
@@ -106,9 +106,9 @@ int16_t crypto_encrypt(uint8_t * msg_out, uint8_t * msg_in, uint16_t msg_len) {
     }
 
     /* Add nonce at the end of the packet */
-    memcpy(&msg_out[crypto_secretbox_BOXZEROBYTES + msg_len + crypto_secretbox_KEYBYTES], nonce, NOUNCE_SIZE);
+    memcpy(&msg_out[crypto_secretbox_BOXZEROBYTES + msg_len + crypto_secretbox_KEYBYTES], nonce, NONCE_SIZE);
 
-    return msg_len + crypto_secretbox_KEYBYTES + NOUNCE_SIZE;
+    return msg_len + crypto_secretbox_KEYBYTES + NONCE_SIZE;
 }
 
 void crypto_init() {
