@@ -1,6 +1,6 @@
 #include <vmem/vmem.h>
 
-#include <param/param.h>
+#include <param/param_server.h>
 #include "../param_config.h"
 
 #include "crypto/crypto.h"
@@ -28,3 +28,10 @@ PARAM_DEFINE_STATIC_VMEM(PARAMID_CRYPTO_NONCE_TX_ID,       crypto_nonce_tx_id,  
 PARAM_DEFINE_STATIC_VMEM(PARAMID_CRYPTO_NONCE_RX_COUNT,    crypto_nonce_rx_count,   PARAM_TYPE_UINT64, 10, sizeof(uint64_t), PM_TELEM | PM_CRYPT,    NULL,                NULL, crypto,0x800, "Nonce counter for rx");
 PARAM_DEFINE_STATIC_VMEM(PARAMID_CRYPTO_FAIL_AUTH_COUNT,   crypto_fail_auth_count,  PARAM_TYPE_UINT16,  1, sizeof(uint16_t), PM_ERRCNT | PM_CRYPT,   NULL,                NULL, crypto, 0x30, NULL);
 PARAM_DEFINE_STATIC_VMEM(PARAMID_CRYPTO_FAIL_NONCE_COUNT,  crypto_fail_nonce_count, PARAM_TYPE_UINT16,  1, sizeof(uint16_t), PM_ERRCNT | PM_CRYPT,   NULL,                NULL, crypto, 0x32, NULL);
+
+#if PARAM_NUM_PUBLISHQUEUES > 0
+PARAM_ADD_PUBLISH(crypto_nonce_tx_count,    PARAM_PUBLISHQUEUE_0);
+PARAM_ADD_PUBLISH(crypto_nonce_rx_count,    PARAM_PUBLISHQUEUE_0);
+PARAM_ADD_PUBLISH(crypto_fail_auth_count,   PARAM_PUBLISHQUEUE_0);
+PARAM_ADD_PUBLISH(crypto_fail_nonce_count,  PARAM_PUBLISHQUEUE_0);
+#endif
