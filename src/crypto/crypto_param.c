@@ -34,4 +34,7 @@ PARAM_ADD_PUBLISH(crypto_nonce_tx_count,    PARAM_PUBLISHQUEUE_0);
 PARAM_ADD_PUBLISH(crypto_nonce_rx_count,    PARAM_PUBLISHQUEUE_0);
 PARAM_ADD_PUBLISH(crypto_fail_auth_count,   PARAM_PUBLISHQUEUE_0);
 PARAM_ADD_PUBLISH(crypto_fail_nonce_count,  PARAM_PUBLISHQUEUE_0);
+
+PARAM_ADD_PUBLISH(tx_encrypt,               PARAM_PUBLISHQUEUE_0);
+PARAM_ADD_PUBLISH(rx_decrypt,               PARAM_PUBLISHQUEUE_0);
 #endif
