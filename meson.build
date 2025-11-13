@@ -1,9 +1,4 @@
-project('cblk', ['c', 'cpp'], default_options: [
-	'buildtype=debug', 
-	'c_std=gnu11', 
-	'b_lto=false',
-    'b_lundef=false',
-    'default_library=shared'])
+project('cblk', ['c', 'cpp'])
 
 if not meson.is_subproject()
     csp_dep = dependency('csp', fallback : ['csp', 'csp_dep'], required: true).partial_dependency(links: true, includes: true)
