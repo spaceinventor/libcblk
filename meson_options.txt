@@ -1,0 +1,6 @@
+option('nacl_impl', 
+    type: 'combo', 
+    choices: ['tweetnacl', 'sodium'], 
+    value: 'tweetnacl', 
+    description: 'Which NaCl implementation to use'
+)

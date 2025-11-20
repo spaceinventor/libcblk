@@ -4,3 +4,6 @@
 [submodule "subprojects/csp"]
 	path = subprojects/csp
 	url = https://github.com/spaceinventor/libcsp
+[submodule "src/crypto/sodium"]
+	path = src/crypto/sodium
+	url = https://github.com/jedisct1/libsodium.git
