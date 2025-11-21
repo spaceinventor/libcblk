@@ -112,7 +112,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
 
     uint16_t frame_length = be16toh(frame->hdr.data_length);
 
-    if (_cblk_rx_debug >= 1) {
+    if (_cblk_rx_debug >= 3) {
         printf("RX %p chain %u CCSDS header: %u %u %u\n", frame, group, frame->hdr.csp_packet_idx, frame->hdr.ccsds_frame_idx, frame_length);
     }
 
@@ -126,7 +126,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
     } else if (ifdata->rx_packet_idx == frame->hdr.csp_packet_idx && ifdata->rx_frame_idx == frame->hdr.ccsds_frame_idx) { 
 
         /* We already handled this frame */
-        if (_cblk_rx_debug >= 1) printf("Discarding dublicated frame\n");
+        if (_cblk_rx_debug >= 2) printf("Discarding dublicated frame\n");
         return CSP_ERR_NONE;
 
     } else if (frame->hdr.ccsds_frame_idx == 0) { 
@@ -139,7 +139,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
 
         /* We are missing part of the received CSP frame */
         if (_cblk_rx_debug >= 1) {
-            printf("Part of CSP frame is missing: Received part %d of %d, expected part %d of %d\n", 
+            printf("Part of CSP frame is missing: Received part %"PRIu8" of %"PRIu8", expected part %"PRIu8" of %"PRIu8"\n", 
                 frame->hdr.ccsds_frame_idx, frame->hdr.csp_packet_idx, ifdata->rx_frame_idx+1, ifdata->rx_packet_idx);
         }
         iface->frame++;
@@ -192,7 +192,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
         rx_packet->frame_length = frame_length;
     }
 
-    if (_cblk_rx_debug >= 3) {
+    if (_cblk_rx_debug >= 5) {
         csp_hex_dump("-rx_dec", rx_packet->frame_begin, rx_packet->frame_length);
     }
 
@@ -203,15 +203,13 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
         return CSP_ERR_INVAL;
     }
 
-    if (_cblk_rx_debug >= 2) {
+    if (_cblk_rx_debug >= 4) {
         csp_hex_dump("packet", rx_packet->data, rx_packet->length);
     }
 
     csp_qfifo_write(rx_packet, iface, NULL);
     /* We have succesfully transmitted a full packet,
     reset our internal index counters for the next ones */
-    ifdata->rx_packet_idx = -1;
-    ifdata->rx_frame_idx = -1;
     return CSP_ERR_NONE;
 }
 
@@ -219,8 +217,8 @@ void csp_if_cblk_init(csp_iface_t * iface) {
 
 	csp_cblk_interface_data_t * ifdata = iface->interface_data;
 
-    ifdata->rx_frame_idx = -1;
-    ifdata->rx_packet_idx = -1;
+    ifdata->rx_frame_idx = UINT8_MAX;
+    ifdata->rx_packet_idx = UINT8_MAX;
 
     iface->nexthop = csp_if_cblk_tx;
 }
