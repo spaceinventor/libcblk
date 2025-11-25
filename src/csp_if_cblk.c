@@ -213,8 +213,6 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
     }
 
     csp_qfifo_write(rx_packet, iface, NULL);
-    /* We have succesfully transmitted a full packet,
-    reset our internal index counters for the next ones */
     return CSP_ERR_NONE;
 }
 
