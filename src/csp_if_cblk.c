@@ -223,5 +223,10 @@ void csp_if_cblk_init(csp_iface_t * iface) {
     ifdata->rx_frame_idx = UINT8_MAX;
     ifdata->rx_packet_idx = UINT8_MAX;
 
+    if(ifdata->cblk_tx_lock == NULL || ifdata->cblk_tx_unlock == NULL) {
+        printf("csp_if_cblk_init: lock function pointers must be set!\n");
+        return;
+    }
+
     iface->nexthop = csp_if_cblk_tx;
 }
