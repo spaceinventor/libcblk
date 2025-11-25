@@ -4,7 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef USE_TWEETNACL
 #include "tweetnacl.h"
+#endif
+
+#ifdef USE_SODIUM
+#include <sodium.h>
+#endif
+
 #include "crypto/crypto_param.h"
 
 #define NONCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
@@ -16,17 +23,6 @@ void crypto_key_generate(param_t * param, int idx) {
     param_get_data(&crypto_key1, _crypto_beforenm[0], sizeof(_crypto_beforenm[0]));
     param_get_data(&crypto_key2, _crypto_beforenm[1], sizeof(_crypto_beforenm[1]));
     param_get_data(&crypto_key3, _crypto_beforenm[2], sizeof(_crypto_beforenm[2]));
-}
-
-/* Required tweetnacl.c */
-void randombytes(unsigned char * a, unsigned long long c) {
-    // Note: Pseudo random since we are not initializing random!
-    unsigned int seed = csp_get_ms();
-    while(c > 0) {
-        *a = rand_r(&seed) & 0xFF;
-        a++;
-        c--;
-    }
 }
 
 /*
