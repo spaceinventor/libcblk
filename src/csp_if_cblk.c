@@ -62,6 +62,8 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
     uint16_t frame_length = packet->frame_length;
     uint8_t* frame_begin = packet->frame_begin;
 
+    ifdata->cblk_tx_lock(iface);
+
     if (param_get_uint8(&tx_encrypt)) {
         frame_length = crypto_encrypt(ifdata->packet_enc, packet->frame_begin, packet->frame_length);
         frame_begin = &ifdata->packet_enc[CRYPTO_PREAMP];
@@ -77,6 +79,7 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
         if (tx_ccsds_buf == NULL) {
             csp_buffer_free(packet);
+            ifdata->cblk_tx_unlock(iface);
             return CSP_ERR_NOBUFS;
         }
 
@@ -97,11 +100,13 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
         if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {
             csp_buffer_free(packet);
+            ifdata->cblk_tx_unlock(iface);
             return CSP_ERR_NOBUFS;
         }
     }
 
     csp_buffer_free(packet);
+    ifdata->cblk_tx_unlock(iface);
 
     return CSP_ERR_NONE;
 }
@@ -166,7 +171,7 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
 
     if (frame->hdr.nacl_crypto_key > 0) {
 
-        if (_cblk_rx_debug >= 3) {
+        if (_cblk_rx_debug >= 4) {
             csp_hex_dump("-rx_enc", &ifdata->packet_dec[CRYPTO_PREAMP], frame_length);
         }
 

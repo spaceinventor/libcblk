@@ -46,6 +46,9 @@ typedef struct {
     /* Function provided by implementation to send a CCSDS frame */
     int (*cblk_tx_send)(csp_iface_t* iface, cblk_frame_t* frame);
 
+    void (*cblk_tx_lock)(csp_iface_t* iface);
+    void (*cblk_tx_unlock)(csp_iface_t* iface);
+
     /* Variables for internal use */
     uint8_t rx_packet_idx;
     uint8_t rx_frame_idx;
