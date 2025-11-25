@@ -78,8 +78,8 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
         if (tx_ccsds_buf == NULL) {
-            csp_buffer_free(packet);
             ifdata->cblk_tx_unlock(iface);
+            csp_buffer_free(packet);
             return CSP_ERR_NOBUFS;
         }
 
@@ -99,14 +99,14 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
         bytes_remain -= segment_len;
 
         if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {
-            csp_buffer_free(packet);
             ifdata->cblk_tx_unlock(iface);
+            csp_buffer_free(packet);
             return CSP_ERR_NOBUFS;
         }
     }
 
-    csp_buffer_free(packet);
     ifdata->cblk_tx_unlock(iface);
+    csp_buffer_free(packet);
 
     return CSP_ERR_NONE;
 }
