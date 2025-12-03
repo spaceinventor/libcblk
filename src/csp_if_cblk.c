@@ -78,9 +78,10 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
     uint16_t bytes_remain = packet->frame_length;
     uint8_t num_frames = num_ccsds_from_csp(packet->frame_length);
 
+    ifdata->cblk_tx_lock(iface);
+
     for (int8_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
 
-        ifdata->cblk_tx_lock(iface);
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
         if (tx_ccsds_buf == NULL) {
             ifdata->cblk_tx_unlock(iface);
