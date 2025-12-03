@@ -59,23 +59,28 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
         csp_hex_dump("tx_frame", packet->frame_begin, packet->frame_length);
     }
 
-    uint16_t frame_length = packet->frame_length;
-    uint8_t* frame_begin = packet->frame_begin;
-
-    ifdata->cblk_tx_lock(iface);
 
     if (param_get_uint8(&tx_encrypt)) {
-        frame_length = crypto_encrypt(ifdata->packet_enc, packet->frame_begin, packet->frame_length);
-        frame_begin = &ifdata->packet_enc[CRYPTO_PREAMP];
+
+        if(crypto_encrypt_inplace(packet) < 0) {
+            csp_buffer_free(packet);
+            if (_cblk_tx_debug >= 2) {
+                printf("Encryption fail: packet too large to encrypt\n");
+            }
+            return CSP_ERR_INVAL;
+        }
 
         if (_cblk_tx_debug >= 3) {
-            csp_hex_dump("tx_enc", frame_begin, frame_length);
+            csp_hex_dump("tx_enc", packet->frame_begin, packet->frame_length);
         }
     }
 
-    uint16_t bytes_remain = frame_length;
-    for (int8_t frame_cnt = 0; frame_cnt < num_ccsds_from_csp(frame_length); frame_cnt++) {
+    uint16_t bytes_remain = packet->frame_length;
+    uint8_t num_frames = num_ccsds_from_csp(packet->frame_length);
 
+    for (int8_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
+
+        ifdata->cblk_tx_lock(iface);
         cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
         if (tx_ccsds_buf == NULL) {
             ifdata->cblk_tx_unlock(iface);
@@ -87,15 +92,15 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
         tx_ccsds_buf->hdr.csp_packet_idx = iface->tx;
         tx_ccsds_buf->hdr.ccsds_frame_idx = frame_cnt;
-        tx_ccsds_buf->hdr.data_length = htobe16(frame_length);
+        tx_ccsds_buf->hdr.data_length = htobe16(packet->frame_length);
         tx_ccsds_buf->hdr.nacl_crypto_key = param_get_uint8(&tx_encrypt);
 
         if (_cblk_tx_debug >= 1) {
-            printf("TX CCSDS header: %u %u %u\n", tx_ccsds_buf->hdr.csp_packet_idx, frame_cnt, frame_length);
+            printf("TX CCSDS header: %u %u %u\n", tx_ccsds_buf->hdr.csp_packet_idx, frame_cnt, packet->frame_length);
         }
         uint16_t segment_len = (CBLK_DATA_LEN < bytes_remain) ? CBLK_DATA_LEN : bytes_remain;
 
-        memcpy(tx_ccsds_buf->data, frame_begin+(frame_length-bytes_remain), segment_len);
+        memcpy(tx_ccsds_buf->data, packet->frame_begin+(packet->frame_length-bytes_remain), segment_len);
         bytes_remain -= segment_len;
 
         if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {

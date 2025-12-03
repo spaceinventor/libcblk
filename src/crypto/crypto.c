@@ -13,8 +13,11 @@
 #endif
 
 #include "crypto/crypto_param.h"
+#define CSP_ID2_HEADER_SIZE 6
 
 #define NONCE_SIZE (sizeof(uint64_t) + sizeof(uint8_t))
+
+_Static_assert(CSP_PACKET_PADDING_BYTES > crypto_secretbox_ZEROBYTES + CSP_ID2_HEADER_SIZE, "Not enough padding before csp packet for in-place encryption!");
 
 uint8_t _crypto_beforenm[CRYPTO_NUM_KEYS][crypto_secretbox_KEYBYTES];
 
@@ -105,6 +108,79 @@ int16_t crypto_encrypt(uint8_t * msg_out, uint8_t * msg_in, uint16_t msg_len) {
     memcpy(&msg_out[crypto_secretbox_BOXZEROBYTES + msg_len + crypto_secretbox_KEYBYTES], nonce, NONCE_SIZE);
 
     return msg_len + crypto_secretbox_KEYBYTES + NONCE_SIZE;
+}
+
+/**
+ * @brief Encrypts a CSP packet payload in-place using NaCl/libsodium.
+ *
+ * This function performs authenticated encryption on the data contained in the
+ * packet structure. It modifies the packet's data buffer directly, adjusting
+ * the `frame_begin` pointer and `frame_length` to account for the prepended
+ * Message Authentication Code (MAC) and the appended Nonce.
+ *
+ * **Memory Layout Transformation:**
+ *
+ * **Before:**
+ * @code
+ * [  Headroom  ] [ Payload (N) ] [      Tailroom      ]
+ * ^
+ * frame_begin
+ * @endcode
+ *
+ * **After:**
+ * @code
+ * [ MAC (16) ] [ Encrypted Payload (N) ] [ 0x00 (16) ] [ Nonce (8) ] [ TX ID (1) ]
+ * ^
+ * frame_begin
+ * @endcode
+ *
+ * @pre **Compile-time Check:** `CSP_PACKET_PADDING_BYTES` must be greater than
+ * `crypto_secretbox_ZEROBYTES + CSP_ID2_HEADER_SIZE`. This is enforced by a
+ * `_Static_assert` to ensure safe headless padding.
+ *
+ * @param[in,out] packet Pointer to the CSP packet structure. The `frame_begin`,
+ * `frame_length`, and buffer contents will be modified.
+ *
+ * @return
+ * - \b CSP_ERR_NONE: Encryption successful.
+ * - \b CSP_ERR_INVAL: Packet buffer too small for prepending nonce and zerofill.
+ */
+int16_t crypto_encrypt_inplace(csp_packet_t * packet) {
+
+    /* Check that there is enough space to postpend nonce and 16 byte zerofill */
+    if(packet->length + NONCE_SIZE + crypto_secretbox_BOXZEROBYTES > CSP_BUFFER_SIZE) {
+        return CSP_ERR_INVAL;
+    }
+
+    /* Update and get transmit nonce */
+    uint64_t tx_nonce = param_get_uint64(&crypto_nonce_tx_count) + 1;
+    param_set_uint64(&crypto_nonce_tx_count, tx_nonce);
+
+    /* Pack nonce into 24-bytes format, expected by NaCl */
+    unsigned char nonce[crypto_box_NONCEBYTES] = {};
+    memcpy(nonce, &tx_nonce, sizeof(uint64_t));
+    /* Add nonce ID to nonce */
+    nonce[sizeof(uint64_t)] = param_get_uint8(&crypto_nonce_tx_id);
+
+    /* Make room for zerofill at the beginning of message */
+    uint8_t * padding_begin = packet->frame_begin - crypto_secretbox_ZEROBYTES;
+    memset(padding_begin, 0, crypto_secretbox_ZEROBYTES);
+
+    /* Encryption only returns -1 if mlen < 32 */
+    crypto_box_afternm(padding_begin, padding_begin, packet->frame_length + crypto_secretbox_ZEROBYTES, nonce, _crypto_beforenm[param_get_uint8(&tx_encrypt)-1]);
+
+    /* Adjust packet pointers and length for the prepended MAC */
+    packet->frame_begin -= crypto_secretbox_MACBYTES;
+    packet->frame_length += crypto_secretbox_MACBYTES;
+
+    /* Zero out the 16 bytes between the end of the encrypted data and the nonce for backwards compatibility */
+    memset(packet->frame_begin + packet->frame_length, 0, crypto_secretbox_BOXZEROBYTES);
+
+    /* Add nonce at the end of the packet plus 16 bytes for backwards compatibility */
+    memcpy(packet->frame_begin + (crypto_secretbox_BOXZEROBYTES + packet->frame_length), nonce, NONCE_SIZE);
+    packet->frame_length += NONCE_SIZE + crypto_secretbox_BOXZEROBYTES;
+
+    return CSP_ERR_NONE;
 }
 
 void crypto_init() {
