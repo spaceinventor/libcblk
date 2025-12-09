@@ -8,16 +8,16 @@
 #ifdef USE_TWEETNACL
 #include "tweetnacl.h"
 
--/* Required to link tweetnacl.c */
--void randombytes(unsigned char * a, unsigned long long c) {
--    // Note: Pseudo random since we are not initializing random!
--    unsigned int seed = csp_get_ms();
--    while(c > 0) {
--        *a = rand_r(&seed) & 0xFF;
--        a++;
--        c--;
--    }
--}
+/* Required to link tweetnacl.c */
+void randombytes(unsigned char * a, unsigned long long c) {
+    // Note: Pseudo random since we are not initializing random!
+    unsigned int seed = csp_get_ms();
+    while(c > 0) {
+        *a = rand_r(&seed) & 0xFF;
+        a++;
+        c--;
+    }
+}
 #endif
 
 #ifdef USE_SODIUM
