@@ -20,7 +20,7 @@ typedef struct __attribute__((packed))
     uint8_t                 reserved1       : 1;
 
     /* Byte 2 & 3*/
-    uint16_t                data_length     :16; //! Data length in RS frame in bytes
+    uint16_t                packet_length     :16; //! Total CSP packet length in bytes including csp header and crypto overhead if encrypted
 
 } cblk_hdr_t;
 
@@ -33,7 +33,10 @@ typedef struct __attribute__((packed))
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))
 #define CRYPTO_PREAMP 16 /* crypto_secretbox_BOXZEROBYTES */
-#define CRYPTO_POSTAMP 32+9 /* crypto_secretbox_KEYBYTES + NOUNCE_SIZE */
+#define CRYPTO_POSTAMP (16+9) /* 16 zero fill + NONCE_SIZE */
+#define CRYPTO_MAC_SIZE 16
+/* ccsds frame index is 4 bits */
+#define CBLK_MAX_FRAMES_PER_PACKET 15
 
 typedef struct {
 
@@ -52,8 +55,7 @@ typedef struct {
     /* Variables for internal use */
     uint8_t rx_packet_idx;
     uint8_t rx_frame_idx;
-    uint8_t packet_enc[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
-    uint8_t packet_dec[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
+    csp_packet_t* rx_packet;
 
 } csp_cblk_interface_data_t;
 
