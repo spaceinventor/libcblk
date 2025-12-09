@@ -1,6 +1,5 @@
 #include "cblk/csp_if_cblk.h"
 
-#include <math.h>
 #include <stdio.h>
 #include <endian.h>
 #include <csp/crypto/csp_hmac.h>
@@ -83,6 +82,14 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
     uint16_t bytes_remain = packet->frame_length;
     uint8_t num_frames = num_ccsds_from_csp(packet->frame_length);
+
+    if(num_frames == 0) {
+        csp_buffer_free(packet);
+        if (_cblk_tx_debug >= 1) {
+            printf("Packet too large to send: %u bytes\n", packet->frame_length);
+        }
+        return CSP_ERR_INVAL;
+    }
 
     ifdata->cblk_tx_lock(iface);
 
