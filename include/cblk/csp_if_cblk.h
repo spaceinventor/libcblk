@@ -33,7 +33,7 @@ typedef struct __attribute__((packed))
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))
 #define CRYPTO_PREAMP 16 /* crypto_secretbox_BOXZEROBYTES */
-#define CRYPTO_POSTAMP (16+9) /* 16 zero fill + NOUNCE_SIZE */
+#define CRYPTO_POSTAMP (16+9) /* 16 zero fill + NONCE_SIZE */
 #define CRYPTO_MAC_SIZE 16
 /* ccsds frame index is 4 bits */
 #define CBLK_MAX_FRAMES_PER_PACKET 15
