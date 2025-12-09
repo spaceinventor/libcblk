@@ -39,17 +39,49 @@ void crypto_key_generate(param_t * param, int idx) {
     param_get_data(&crypto_key3, _crypto_beforenm[2], sizeof(_crypto_beforenm[2]));
 }
 
-/*
-There is a 32-octet padding requirement on the plaintext buffer that you pass to crypto_box.
-Internally, the NaCl implementation uses this space to avoid having to allocate memory or
-use static memory that might involve a cache hit (see Bernstein's paper on cache timing
-side-channel attacks for the juicy details).
-
-Similarly, the crypto_box_open call requires 16 octets of zero padding before the start
-of the actual ciphertext. This is used in a similar fashion. These padding octets are not
-part of either the plaintext or the ciphertext, so if you are sending ciphertext across the
-network, don't forget to remove them!
-*/
+/**
+ * @brief Decrypts a CSP packet payload in-place using NaCl/libsodium.
+ *
+ * This function verifies the Message Authentication Code (MAC) and decrypts the
+ * payload contained in the packet structure. It also performs replay protection
+ * by validating the received Nonce against a stored high-water mark.
+ *
+ * The function modifies the packet's data buffer directly, stripping the
+ * protocol overhead (MAC, padding, Nonce) to restore the original plaintext
+ * payload.
+ *
+ * **Memory Layout Transformation:**
+ *
+ * **Before:**
+ * @code
+ * [ MAC (16) ] [ Encrypted Payload (N) ] [ 0x00 (16) ] [ Nonce (8) ] [ TX ID (1) ]
+ * ^
+ * frame_begin
+ * @endcode
+ *
+ * **After:**
+ * @code
+ * [  Headroom  ] [ Plaintext Payload (N) ] [      Tailroom      ]
+ * ^
+ * frame_begin
+ * @endcode
+ *
+ * **Validation Steps:**
+ * 1. Checks if the packet is long enough to contain the necessary crypto overhead.
+ * 2. Extracts the Nonce from the end of the packet.
+ * 3. Prepends the required zerofill padding (`crypto_secretbox_BOXZEROBYTES`) to the start.
+ * 4. Performs authenticated decryption using `crypto_box_open_afternm`.
+ * 5. Verifies the Nonce counter is strictly greater than the last received Nonce for that group (Replay Protection).
+ *
+ * @param[in,out] packet Pointer to the CSP packet structure containing the encrypted frame.
+ * On success, `frame_begin` and `frame_length` are updated to point
+ * to the decrypted plaintext.
+ * @param[in] crypto_key The index of the pre-shared key to use for decryption (1-based index).
+ *
+ * @return
+ * - \b CSP_ERR_NONE: Decryption successful and Nonce is valid.
+ * - \b -1: Decryption failed (Authentication error, invalid key, packet too short, or replay detected).
+ */
 int16_t crypto_decrypt(csp_packet_t * packet, uint8_t crypto_key) {
 
     if(crypto_key == 0 || crypto_key > CRYPTO_NUM_KEYS) {
@@ -79,8 +111,8 @@ int16_t crypto_decrypt(csp_packet_t * packet, uint8_t crypto_key) {
     /* Message successfully decrypted, check for valid nonce */
     uint64_t nonce_counter;
     memcpy(&nonce_counter, decrypt_nonce, sizeof(uint64_t));
-    uint8_t nounce_group = decrypt_nonce[sizeof(uint64_t)];
-    uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nounce_group);
+    uint8_t nonce_group = decrypt_nonce[sizeof(uint64_t)];
+    uint64_t nonce_rx = param_get_uint64_array(&crypto_nonce_rx_count, nonce_group);
     if(nonce_counter <= nonce_rx) {
         param_set_uint16(&crypto_fail_nonce_count, param_get_uint16(&crypto_fail_nonce_count) + 1);
         return -1;
@@ -91,7 +123,7 @@ int16_t crypto_decrypt(csp_packet_t * packet, uint8_t crypto_key) {
     packet->frame_begin += crypto_secretbox_ZEROBYTES;
 
     /* Update counter with received value so that next sent value is higher */
-    param_set_uint64_array(&crypto_nonce_rx_count, nounce_group, nonce_counter);
+    param_set_uint64_array(&crypto_nonce_rx_count, nonce_group, nonce_counter);
 
     return CSP_ERR_NONE;
 }
