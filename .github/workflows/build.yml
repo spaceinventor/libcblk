@@ -21,4 +21,4 @@ jobs:
         fetch-depth: 100
     - name: Meson build & test
       run: |
-        meson setup builddir && ninja -C builddir test
+        meson setup builddir -Dcsp:packet_padding_bytes=38 && ninja -C builddir test
