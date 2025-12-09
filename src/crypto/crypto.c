@@ -122,7 +122,7 @@ int16_t crypto_decrypt(csp_packet_t * packet, uint8_t crypto_key) {
  *
  * @pre **Compile-time Check:** `CSP_PACKET_PADDING_BYTES` must be greater than
  * `crypto_secretbox_ZEROBYTES + CSP_ID2_HEADER_SIZE`. This is enforced by a
- * `_Static_assert` to ensure safe headless padding.
+ * `_Static_assert` to ensure safe headroom padding.
  *
  * @param[in,out] packet Pointer to the CSP packet structure. The `frame_begin`,
  * `frame_length`, and buffer contents will be modified.
