@@ -3,6 +3,7 @@
 #include <csp/arch/csp_time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef USE_TWEETNACL
 #include "tweetnacl.h"

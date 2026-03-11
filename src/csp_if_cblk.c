@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <endian.h>
+#include <string.h>
 #include <csp/crypto/csp_hmac.h>
 #include <csp/csp_id.h>
 #include <csp/csp_iflist.h>
