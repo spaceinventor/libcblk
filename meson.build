@@ -25,52 +25,12 @@ if nacl_impl == 'tweetnacl'
     cblk_src += 'src/crypto/tweetnacl.c'
     cblk_args += '-DUSE_TWEETNACL'
 elif nacl_impl == 'sodium'
-
-    # we only support cross compiling to arm-none-eabi targets
-    if meson.is_cross_build() == true
-
-        mod = import('unstable-external_project')
-
-        configure_opts = [
-            '--enable-minimal',
-            '--disable-ssp',
-            '--disable-pie',
-            '--enable-static',
-            '--disable-shared',
-            '--without-pthreads',
-            '--prefix=@PREFIX@',
-            '--libdir=@PREFIX@/@LIBDIR@',
-            '--includedir=@PREFIX@/@INCLUDEDIR@',
-        ]
-        sodium_env = environment()
-        target_c_args = get_option('c_args')
-
-        c_flags_str = '-O3 '
-        foreach arg : target_c_args
-            c_flags_str += arg + ' '
-        endforeach
-
-        sodium_env.set('CFLAGS', c_flags_str)
-        sodium_env.set('LDFLAGS', '-specs=nosys.specs')
-
-        cross_configure_opt = [
-            '--host=arm-none-eabi',
-        ]
-
-        libsodium_proj = mod.add_project('src/crypto/sodium/configure',
-            configure_options : configure_opts,
-            verbose : false,
-            cross_configure_options : cross_configure_opt,
-            env : sodium_env,
-        )
-
-        sodium_dep = libsodium_proj.dependency('sodium')
-
+    if meson.is_cross_build()
+        sodium_proj = subproject('sodium', required: true)
+        sodium_dep = sodium_proj.get_variable('sodium_dep')
     else
-        sodium_dep = dependency('sodium', required: true)
+        sodium_dep = dependency('libsodium', required: true)
     endif
-
-
     cblk_deps += sodium_dep
     cblk_args += '-DUSE_SODIUM'
 endif
