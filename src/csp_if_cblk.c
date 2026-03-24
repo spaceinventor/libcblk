@@ -45,6 +45,7 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
     if (ifdata->cblk_tx_is_active != NULL && !ifdata->cblk_tx_is_active(iface)) {
 
+        iface->tx--;
         if (from_me) {
             forward_other_ifcs(iface, packet);
         } else {
