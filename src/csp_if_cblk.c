@@ -9,6 +9,11 @@
 #include "crypto/crypto.h"
 #include <param/param.h>
 
+#ifdef RS_ENCODE
+#include "rs.h"
+#include "ccsds_randomize.h"
+#endif
+
 uint8_t _cblk_rx_debug = 0;
 uint8_t _cblk_tx_debug = 0;
 
@@ -100,6 +105,15 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
 
         memcpy(tx_ccsds_buf->data, frame_begin+(frame_length-bytes_remain), segment_len);
         bytes_remain -= segment_len;
+
+#ifdef RS_ENCODE
+        /* In case RS encoding is enabled, the driver is expected to allocate additional space around the CCSDS frame */
+        uint32_t *frame_asm = &(*(((uint32_t*)tx_ccsds_buf)-1));
+        *frame_asm = htobe32(0x1ACFFC1D);
+
+        encode_rs_ccsds((uint8_t *)tx_ccsds_buf, ((uint8_t *)tx_ccsds_buf)+CCSDS_FRAME_LEN, 0);
+        ccsds_randomize((uint8_t *)tx_ccsds_buf);
+#endif
 
         if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {
             ifdata->cblk_tx_unlock(iface);

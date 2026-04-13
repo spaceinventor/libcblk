@@ -19,6 +19,14 @@ cblk_src = files([
     'src/crypto/crypto_param.c',
 ])
 
+if get_option('rs_encode')
+    cblk_args += '-DRS_ENCODE'
+    cblk_src += files([
+        'src/ccsds_randomize.c',
+        'src/rs_encode.c',
+    ])
+endif
+
 nacl_impl = get_option('nacl_impl')
 
 if nacl_impl == 'tweetnacl'

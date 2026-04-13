@@ -30,6 +30,11 @@ typedef struct __attribute__((packed))
     uint8_t                 data[];              //! Space Inventor specific data
 } cblk_frame_t;
 
+#ifdef RS_ENCODE
+#define ASM_LEN 4
+#define RS_CHECKSUM_LEN 32
+#endif
+
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))
 #define CRYPTO_PREAMP 16 /* crypto_secretbox_BOXZEROBYTES */
