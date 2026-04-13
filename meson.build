@@ -2,6 +2,7 @@ project('cblk', ['c', 'cpp'])
 
 cblk_deps = []
 cblk_args = []
+conf = configuration_data()
 
 if not meson.is_subproject()
     csp_dep = dependency('csp', fallback : ['csp', 'csp_dep'], required: true).partial_dependency(links: true, includes: true)
@@ -20,7 +21,7 @@ cblk_src = files([
 ])
 
 if get_option('rs_encode')
-    cblk_args += '-DRS_ENCODE'
+    conf.set('RS_ENCODE', 1)
     cblk_src += files([
         'src/ccsds_randomize.c',
         'src/rs_encode.c',
@@ -43,19 +44,20 @@ elif nacl_impl == 'sodium'
     cblk_args += '-DUSE_SODIUM'
 endif
 
-cblk_inc = include_directories('src')
-api = include_directories('include')
+cblk_inc = include_directories('.', 'include')
+
+libcblk_h = configure_file(output: 'libcblk.h', configuration: conf)
 
 cblk_lib = static_library('cblk',
-	sources: [cblk_src],
-	include_directories : [cblk_inc, api],
+	sources: [cblk_src, libcblk_h],
+	include_directories : [cblk_inc],
 	dependencies : cblk_deps,
         c_args : cblk_args,
 	install : false
 )
 
 cblk_dep = declare_dependency(
-    include_directories : api,
+    include_directories : cblk_inc,
     link_with : cblk_lib,
     dependencies: cblk_deps,
 )
