@@ -108,11 +108,11 @@ int16_t crypto_encrypt(uint8_t * msg_out, uint8_t * msg_in, uint16_t msg_len) {
     return msg_len + crypto_secretbox_KEYBYTES + NONCE_SIZE;
 }
 
-void crypto_init() {
+void crypto_init(bool decrease_rx_decrypt) {
 
     crypto_key_generate(NULL, -1);
 
-    if (param_get_uint8(&rx_decrypt) > 0) {
+    if (decrease_rx_decrypt && param_get_uint8(&rx_decrypt) > 0) {
         param_set_uint8(&rx_decrypt, param_get_uint8(&rx_decrypt) - 1);
     }
 }
