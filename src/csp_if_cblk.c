@@ -8,6 +8,7 @@
 #include <csp/csp_iflist.h>
 #include "crypto/crypto.h"
 #include <param/param.h>
+#include <csp/csp_hooks.h>
 
 uint8_t _cblk_rx_debug = 0;
 uint8_t _cblk_tx_debug = 0;
@@ -169,7 +170,11 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
         return CSP_ERR_NONE;
     }
 
-    csp_packet_t* rx_packet = csp_buffer_get(frame_length);
+    csp_packet_t* rx_packet = csp_buffer_get(0);
+    if (rx_packet == NULL) {
+        csp_panic("cblk_rx out of buffers");
+        while (1);
+    }
     csp_id_setup_rx(rx_packet);
 
     if (frame->hdr.nacl_crypto_key > 0) {
