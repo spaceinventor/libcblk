@@ -19,7 +19,7 @@
 
 uint8_t _crypto_beforenm[CRYPTO_NUM_KEYS][crypto_secretbox_KEYBYTES];
 
-void crypto_key_generate(param_t * param, int idx) {
+void crypto_key_generate(const param_t * param, int idx) {
 
     param_get_data(&crypto_key1, _crypto_beforenm[0], sizeof(_crypto_beforenm[0]));
     param_get_data(&crypto_key2, _crypto_beforenm[1], sizeof(_crypto_beforenm[1]));
