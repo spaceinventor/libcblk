@@ -7,7 +7,9 @@
 #include <csp/csp_id.h>
 #include <csp/csp_iflist.h>
 #include "crypto/crypto.h"
+#include "csp/autoconfig.h"
 #include "csp/csp_buffer.h"
+#include "csp/csp_error.h"
 #include <param/param.h>
 
 uint8_t _cblk_rx_debug = 0;
@@ -15,7 +17,7 @@ uint8_t _cblk_tx_debug = 0;
 
 /* Calculate number of CCSDS frames required to send CSP packet of given size
  * Returns 0 if size exceeds maximum allowed */
-static uint8_t num_ccsds_from_csp(uint16_t framesize) {
+uint8_t num_ccsds_from_csp(uint16_t framesize) {
     if(framesize > (CBLK_DATA_LEN * CBLK_MAX_FRAMES_PER_PACKET)) {
         return 0;
     }
@@ -83,52 +85,11 @@ int csp_if_cblk_tx(csp_iface_t * iface, uint16_t via, csp_packet_t *packet, int 
         }
     }
 
-    uint16_t bytes_remain = packet->frame_length;
-    uint8_t num_frames = num_ccsds_from_csp(packet->frame_length);
 
-    if(num_frames == 0) {
+    if(ifdata->cblk_tx_send(iface, packet) < 0) {
         csp_buffer_free(packet);
-        if (_cblk_tx_debug >= 1) {
-            printf("Packet too large to send: %u bytes\n", packet->frame_length);
-        }
-        return CSP_ERR_INVAL;
+        return CSP_ERR_NOBUFS;
     }
-
-    ifdata->cblk_tx_lock(iface);
-
-    for (int8_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
-
-        cblk_frame_t * tx_ccsds_buf = ifdata->cblk_tx_buffer_get(iface);
-        if (tx_ccsds_buf == NULL) {
-            ifdata->cblk_tx_unlock(iface);
-            csp_buffer_free(packet);
-            return CSP_ERR_NOBUFS;
-        }
-
-        memset(tx_ccsds_buf, 0, sizeof(cblk_hdr_t));
-
-        tx_ccsds_buf->hdr.csp_packet_idx = iface->tx;
-        tx_ccsds_buf->hdr.ccsds_frame_idx = frame_cnt;
-        tx_ccsds_buf->hdr.packet_length = htobe16(packet->frame_length);
-        tx_ccsds_buf->hdr.nacl_crypto_key = param_get_uint8(&tx_encrypt);
-
-        if (_cblk_tx_debug >= 1) {
-            printf("TX CCSDS header: %u %u %u\n", tx_ccsds_buf->hdr.csp_packet_idx, frame_cnt, packet->frame_length);
-        }
-        uint16_t segment_len = (CBLK_DATA_LEN < bytes_remain) ? CBLK_DATA_LEN : bytes_remain;
-
-        memcpy(tx_ccsds_buf->data, packet->frame_begin+(packet->frame_length-bytes_remain), segment_len);
-        bytes_remain -= segment_len;
-
-        if (ifdata->cblk_tx_send(iface, tx_ccsds_buf) < 0) {
-            ifdata->cblk_tx_unlock(iface);
-            csp_buffer_free(packet);
-            return CSP_ERR_NOBUFS;
-        }
-    }
-
-    ifdata->cblk_tx_unlock(iface);
-    csp_buffer_free(packet);
 
     return CSP_ERR_NONE;
 }
@@ -256,11 +217,6 @@ void csp_if_cblk_init(csp_iface_t * iface) {
     ifdata->rx_frame_idx = UINT8_MAX;
     ifdata->rx_packet_idx = UINT8_MAX;
     ifdata->rx_packet = csp_buffer_get(0);
-
-    if(ifdata->cblk_tx_lock == NULL || ifdata->cblk_tx_unlock == NULL) {
-        printf("csp_if_cblk_init: lock function pointers must be set!\n");
-        return;
-    }
 
     iface->nexthop = csp_if_cblk_tx;
 }

@@ -43,14 +43,8 @@ typedef struct {
     /* Implement this function in case CSP packets shall be re-routed when RF interface is inactive */
     int (*cblk_tx_is_active)(csp_iface_t * iface);
 
-    /* Function provided by implementation to provide a buffer for transmitting a CCSDS frame*/
-    cblk_frame_t* (*cblk_tx_buffer_get)(csp_iface_t* iface);
-
     /* Function provided by implementation to send a CCSDS frame */
-    int (*cblk_tx_send)(csp_iface_t* iface, cblk_frame_t* frame);
-
-    void (*cblk_tx_lock)(csp_iface_t* iface);
-    void (*cblk_tx_unlock)(csp_iface_t* iface);
+    int (*cblk_tx_send)(csp_iface_t* iface, csp_packet_t* packet);
 
     /* Variables for internal use */
     uint8_t rx_packet_idx;
@@ -58,6 +52,10 @@ typedef struct {
     csp_packet_t* rx_packet;
 
 } csp_cblk_interface_data_t;
+
+/* Calculate number of CCSDS frames required to send CSP packet of given size
+ * Returns 0 if size exceeds maximum allowed */
+uint8_t num_ccsds_from_csp(uint16_t framesize);
 
 /* This function must be called when a new CCSDS frame is received */
 int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8_t group);
