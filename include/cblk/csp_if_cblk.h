@@ -20,7 +20,7 @@ typedef struct __attribute__((packed))
     uint8_t                 reserved1       : 1;
 
     /* Byte 2 & 3*/
-    uint16_t                data_length     :16; //! Data length in RS frame in bytes
+    uint16_t                packet_length     :16; //! Total CSP packet length in bytes including csp header and crypto overhead if encrypted
 
 } cblk_hdr_t;
 
@@ -33,29 +33,29 @@ typedef struct __attribute__((packed))
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))
 #define CRYPTO_PREAMP 16 /* crypto_secretbox_BOXZEROBYTES */
-#define CRYPTO_POSTAMP 32+9 /* crypto_secretbox_KEYBYTES + NOUNCE_SIZE */
+#define CRYPTO_POSTAMP (16+9) /* 16 zero fill + NONCE_SIZE */
+#define CRYPTO_MAC_SIZE 16
+/* ccsds frame index is 4 bits */
+#define CBLK_MAX_FRAMES_PER_PACKET 15
 
 typedef struct {
 
     /* Implement this function in case CSP packets shall be re-routed when RF interface is inactive */
     int (*cblk_tx_is_active)(csp_iface_t * iface);
 
-    /* Function provided by implementation to provide a buffer for transmitting a CCSDS frame*/
-    cblk_frame_t* (*cblk_tx_buffer_get)(csp_iface_t* iface);
-
     /* Function provided by implementation to send a CCSDS frame */
-    int (*cblk_tx_send)(csp_iface_t* iface, cblk_frame_t* frame);
-
-    void (*cblk_tx_lock)(csp_iface_t* iface);
-    void (*cblk_tx_unlock)(csp_iface_t* iface);
+    int (*cblk_tx_send)(csp_iface_t* iface, csp_packet_t* packet);
 
     /* Variables for internal use */
     uint8_t rx_packet_idx;
     uint8_t rx_frame_idx;
-    uint8_t packet_enc[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
-    uint8_t packet_dec[CRYPTO_PREAMP+CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+CRYPTO_POSTAMP];
+    csp_packet_t* rx_packet;
 
 } csp_cblk_interface_data_t;
+
+/* Calculate number of CCSDS frames required to send CSP packet of given size
+ * Returns 0 if size exceeds maximum allowed */
+uint8_t num_ccsds_from_csp(uint16_t framesize);
 
 /* This function must be called when a new CCSDS frame is received */
 int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8_t group);
