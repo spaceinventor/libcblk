@@ -1,5 +1,6 @@
 #include "cblk/csp_if_cblk.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <endian.h>
 #include <string.h>

@@ -1,6 +1,7 @@
 #include "crypto/crypto.h"
 
 #include <csp/arch/csp_time.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
