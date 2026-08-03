@@ -170,6 +170,11 @@ int csp_if_cblk_rx(csp_iface_t * iface, cblk_frame_t *frame, uint32_t len, uint8
     }
 
     csp_packet_t* rx_packet = csp_buffer_get(frame_length);
+    if (!rx_packet) {
+        iface->rx_error++;
+        return CSP_ERR_NOBUFS;
+    }
+
     csp_id_setup_rx(rx_packet);
 
     if (frame->hdr.nacl_crypto_key > 0) {
