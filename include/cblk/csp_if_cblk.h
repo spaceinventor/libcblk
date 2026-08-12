@@ -5,6 +5,8 @@
 #include <csp/csp.h>
 #include <param/param.h>
 
+#include <libcblk.h>
+
 typedef enum { CBLK_EXTHDR_NOSUPPORT = 0b00, CBLK_EXTHDR_SUPPORT = 0b01, CBLK_EXTHDR_PRESENT = 0b10} ext_hdr_e;
 
 typedef struct __attribute__((packed))
@@ -29,6 +31,11 @@ typedef struct __attribute__((packed))
     cblk_hdr_t              hdr;                 //! Space Inventor specific header
     uint8_t                 data[];              //! Space Inventor specific data
 } cblk_frame_t;
+
+#ifdef RS_ENCODE
+#define ASM_LEN 4
+#define RS_CHECKSUM_LEN 32
+#endif
 
 #define CCSDS_FRAME_LEN 223
 #define CBLK_DATA_LEN (CCSDS_FRAME_LEN-sizeof(cblk_hdr_t))

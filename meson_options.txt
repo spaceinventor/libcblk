@@ -4,3 +4,4 @@ option('nacl_impl',
     value: 'tweetnacl', 
     description: 'Which NaCl implementation to use'
 )
+option('rs_encode', type: 'boolean', value: false, description: 'Do Reed-Solomon encoding as part TX')
