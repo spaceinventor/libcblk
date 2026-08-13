@@ -8,7 +8,7 @@
 
 extern vmem_t vmem_crypto;
 
-void tx_encrypt_cb(param_t * param, int idx) {
+void tx_encrypt_cb(const param_t * param, int idx) {
 
     /* Range check */
     if(param_get_uint8(param) > CRYPTO_NUM_KEYS) {
