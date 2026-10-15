@@ -40,6 +40,10 @@ network, don't forget to remove them!
 uint8_t decrypt_out[CSP_PACKET_PADDING_BYTES+CSP_BUFFER_SIZE+crypto_secretbox_ZEROBYTES];
 int16_t crypto_decrypt(uint8_t * msg_out, uint8_t * decrypt_in, uint16_t ciphertext_len, uint8_t crypto_key) {
 
+    if (ciphertext_len < NONCE_SIZE + crypto_secretbox_ZEROBYTES) {
+        return -2;
+    }
+
     ciphertext_len = ciphertext_len - NONCE_SIZE;
 
     /* Receive nonce */
